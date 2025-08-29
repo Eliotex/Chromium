@@ -1,4 +1,4 @@
-package net.fabricmc.example.mixin;
+package net.eliotex.chromium.mixin;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ScheduledTick;
 import net.minecraft.util.math.BlockBox;
@@ -18,6 +18,7 @@ public abstract class ServerWorldMixin {
     @Shadow private List<ScheduledTick> field_6729;      // running
     @Unique private final Map<Long, List<ScheduledTick>> fastScheduledTicks = new HashMap<>();
     @Unique private final Map<Long, List<ScheduledTick>> fastRunningTicks   = new HashMap<>();
+
     @Unique private static long toChunkKey(int cx, int cz) {
         return ((long) cx & 0xffffffffL) << 32 | ((long) cz & 0xffffffffL);
     }
@@ -68,11 +69,12 @@ public abstract class ServerWorldMixin {
         return removed;
     }
 
-    @Redirect(method = "method_3644(Z)Z", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z"))
+    @Redirect(method = "method_3644(Z)Z",
+            at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z"))
     private boolean optimizedchunkloader$indexAddRunning(List<ScheduledTick> list, Object obj) {
         ScheduledTick tick = (ScheduledTick) obj;
         bucketAdd(this.fastRunningTicks, keyFor(tick.pos), tick);
-        return true;
+        return list.add((ScheduledTick) obj);
     }
 
     @Inject(method = "method_3644(Z)Z", at = @At("TAIL"))
